@@ -59,6 +59,7 @@ public class VtailWindow {
     private final JScrollPane mScrollPane;
     private boolean mScrolling;
     private final String mTitle;
+    private boolean mFirstLine = true;
 
     private final List<String> mLines = Collections.synchronizedList(new ArrayList<String>(30));
 
@@ -151,6 +152,7 @@ public class VtailWindow {
 
             if (!mScrolling) {
                 SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         final JScrollBar verticalScrollBar = mScrollPane.getVerticalScrollBar();
                         verticalScrollBar.setValue(verticalScrollBar.getMaximum());
@@ -189,7 +191,10 @@ public class VtailWindow {
 
         final Document document = mTextPane.getDocument();
         try {
-            document.insertString(document.getLength(), "\n" + line, style);
+            document.insertString(document.getLength(), (mFirstLine ? "" : "\n") + line, style);
+            if (mFirstLine) {
+                mFirstLine = false;
+            }
         } catch (final BadLocationException e) {
             // should never happen
             Log.e("insertString", e);
@@ -203,6 +208,7 @@ public class VtailWindow {
 
     private void initScrollPaneChangeListener() {
         mScrollPane.addMouseWheelListener(new MouseWheelListener() {
+            @Override
             public void mouseWheelMoved(final MouseWheelEvent e) {
                 scrollEvent();
             }
@@ -223,6 +229,7 @@ public class VtailWindow {
 
     private void scrollEvent() {
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 final JScrollBar scrollBar = mScrollPane.getVerticalScrollBar();
                 final int value = scrollBar.getValue() + scrollBar.getVisibleAmount();

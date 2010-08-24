@@ -202,8 +202,8 @@ public class VtailWindow {
     }
 
     public void show() {
-        mFrame.setVisible(true);
         mFrame.pack();
+        mFrame.setVisible(true);
     }
 
     private void initScrollPaneChangeListener() {

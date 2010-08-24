@@ -33,6 +33,13 @@ import javax.swing.JFrame;
 public class RememberingFrame extends JFrame {
     private static final long serialVersionUID = -8884339290080349855L;
 
+    private static final String PREF_MAXIMIZED = "maximized";
+    private static final String PREF_WIDTH = "width";
+    private static final String PREF_HEIGHT = "height";
+    private static final String PREF_X = "x";
+    private static final String PREF_Y = "y";
+
+
     private final Preferences mPreferences;
 
     public RememberingFrame(final Class clazz) {
@@ -42,12 +49,13 @@ public class RememberingFrame extends JFrame {
             @Override
             public void componentResized(final ComponentEvent componentEvent) {
                 final boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
+                Log.d("maximized=" + maximized + " getExtendedState()=" + getExtendedState());
                 if (maximized) {
-                    mPreferences.put("maximized", "true");
+                    mPreferences.put(PREF_MAXIMIZED, "true");
                 } else {
-                    mPreferences.put("maximized", "false");
-                    mPreferences.put("width", "" + getWidth());
-                    mPreferences.put("height", "" + getHeight());
+                    mPreferences.put(PREF_MAXIMIZED, "false");
+                    mPreferences.put(PREF_WIDTH, "" + getWidth());
+                    mPreferences.put(PREF_HEIGHT, "" + getHeight());
 
                 }
             }
@@ -56,8 +64,8 @@ public class RememberingFrame extends JFrame {
             public void componentMoved(final ComponentEvent componentEvent) {
                 final boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
                 if (!maximized) {
-                    mPreferences.put("x", "" + getX());
-                    mPreferences.put("y", "" + getY());
+                    mPreferences.put(PREF_X, "" + getX());
+                    mPreferences.put(PREF_Y, "" + getY());
                 }
             }
         });
@@ -65,13 +73,13 @@ public class RememberingFrame extends JFrame {
 
     @Override
     public void pack() {
-        if ("undefined".equals(mPreferences.get("x", "undefined"))) {
-            super.pack();
+        if (mPreferences.get(PREF_X, null) == null) {
+            setSize(320, 200);
             setLocationRelativeTo(null);
         } else {
-            setBounds(Integer.parseInt(mPreferences.get("x", "320")), Integer.parseInt(mPreferences.get("y", "240")), Integer.parseInt(mPreferences.get(
-                    "width", "320")), Integer.parseInt(mPreferences.get("height", "240")));
-            if ("true".equals(mPreferences.get("maximized", "false"))) {
+            setBounds(Integer.parseInt(mPreferences.get(PREF_X, "320")), Integer.parseInt(mPreferences.get(PREF_Y, "240")),
+                    Integer.parseInt(mPreferences.get(PREF_WIDTH, "320")), Integer.parseInt(mPreferences.get(PREF_HEIGHT, "240")));
+            if ("true".equals(mPreferences.get(PREF_MAXIMIZED, "false"))) {
                 setExtendedState(MAXIMIZED_BOTH);
             }
         }

@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.core;
 
 import java.awt.Font;
 import java.awt.event.KeyAdapter;
@@ -49,12 +49,19 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
 
+import org.jraf.vtail.arguments.Arguments;
+import org.jraf.vtail.arguments.Highlight;
+import org.jraf.vtail.misc.Log;
+import org.jraf.vtail.misc.MiscUtil;
+import org.jraf.vtail.ui.RememberingFrame;
+import org.jraf.vtail.ui.WrapTextPane;
+
 public class VtailWindow {
     private static final SimpleAttributeSet DEFAULT_STYLE = new SimpleAttributeSet();
 
     private final RememberingFrame mFrame;
     private BufferedReader mBufferedReader;
-    private final WrapJTextPane mTextPane;
+    private final WrapTextPane mTextPane;
     private final Arguments mArguments;
     private final JScrollPane mScrollPane;
     private boolean mScrolling;
@@ -78,7 +85,7 @@ public class VtailWindow {
 
         mFrame = new RememberingFrame(VtailWindow.class);
 
-        mTextPane = new WrapJTextPane();
+        mTextPane = new WrapTextPane();
         mTextPane.setFont(new Font(mArguments.fontName, Font.PLAIN, mArguments.fontSize));
         mTextPane.setWrap(!arguments.nowrap);
         mTextPane.setBackground(arguments.background.color);

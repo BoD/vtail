@@ -56,7 +56,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.jraf.vtail.Main</mainClass>
+							<mainClass>org.jraf.vtail.core.Main</mainClass>
 							<packageName>org.jraf.vtail</packageName>
 						</manifest>
 					</archive>

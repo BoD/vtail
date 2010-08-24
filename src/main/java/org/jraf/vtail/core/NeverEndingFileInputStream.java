@@ -22,13 +22,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+
+import org.jraf.vtail.misc.MiscUtil;
 
 public class NeverEndingFileInputStream extends InputStream {
     private final File mFile;

@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.arguments;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
 
 @Parameters(separators = " =")
 public class Arguments {

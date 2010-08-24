@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +31,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 import com.beust.jcommander.JCommander;
+
+import org.jraf.vtail.arguments.Arguments;
 
 public class Main {
 

@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.ui;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -32,7 +32,7 @@ import java.awt.RenderingHints;
 import javax.swing.JTextPane;
 
 
-public class WrapJTextPane extends JTextPane {
+public class WrapTextPane extends JTextPane {
     private static final long serialVersionUID = -5722056766194450258L;
 
     private boolean mWrap;

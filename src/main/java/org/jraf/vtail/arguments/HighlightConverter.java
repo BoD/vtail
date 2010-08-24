@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.arguments;
 
 import java.awt.Color;
 import java.util.regex.Pattern;
@@ -32,6 +32,7 @@ import javax.swing.text.StyleConstants;
 
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
+
 
 public class HighlightConverter extends BaseConverter<Highlight> {
     public HighlightConverter(final String optionName) {

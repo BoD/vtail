@@ -22,13 +22,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.jraf.vtail;
+package org.jraf.vtail.ui;
 
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
+
+import org.jraf.vtail.misc.Log;
 
 public class RememberingFrame extends JFrame {
     private static final long serialVersionUID = -8884339290080349855L;

@@ -30,9 +30,12 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 
+import org.jraf.vtail.misc.Config;
 import org.jraf.vtail.misc.Log;
 
 public class RememberingFrame extends JFrame {
+    private static final String TAG = RememberingFrame.class.getName();
+
     private static final long serialVersionUID = -8884339290080349855L;
 
     private static final String PREF_MAXIMIZED = "maximized";
@@ -51,7 +54,7 @@ public class RememberingFrame extends JFrame {
             @Override
             public void componentResized(final ComponentEvent componentEvent) {
                 final boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
-                Log.d("maximized=" + maximized + " getExtendedState()=" + getExtendedState());
+                if (Config.LOGD) Log.d(TAG, "maximized=" + maximized + " getExtendedState()=" + getExtendedState());
                 if (maximized) {
                     mPreferences.put(PREF_MAXIMIZED, "true");
                 } else {

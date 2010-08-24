@@ -25,10 +25,8 @@
 package org.jraf.vtail.core;
 
 import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,12 +49,15 @@ import javax.swing.text.SimpleAttributeSet;
 
 import org.jraf.vtail.arguments.Arguments;
 import org.jraf.vtail.arguments.Highlight;
+import org.jraf.vtail.misc.Config;
 import org.jraf.vtail.misc.Log;
 import org.jraf.vtail.misc.MiscUtil;
 import org.jraf.vtail.ui.RememberingFrame;
 import org.jraf.vtail.ui.WrapTextPane;
 
 public class VtailWindow {
+    private static final String TAG = VtailWindow.class.getName();
+
     private static final SimpleAttributeSet DEFAULT_STYLE = new SimpleAttributeSet();
 
     private final RememberingFrame mFrame;
@@ -67,8 +68,10 @@ public class VtailWindow {
     private boolean mScrolling;
     private final String mTitle;
     private boolean mFirstLine = true;
+    private int mOldScrollbarMax;
 
     private final List<String> mLines = Collections.synchronizedList(new ArrayList<String>(30));
+
 
 
     public VtailWindow(final Arguments arguments) {
@@ -78,7 +81,7 @@ public class VtailWindow {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (final Exception e) {
-            Log.w("Could not set system plaf", e);
+            Log.w(TAG, "Could not set system plaf", e);
         }
 
         mTitle = arguments.title;
@@ -128,14 +131,14 @@ public class VtailWindow {
                 line = mBufferedReader.readLine();
             } catch (final IOException e) {
                 // should never happen since ready == true
-                Log.e("Cannot read next line: giving up", e);
+                Log.e(TAG, "Cannot read next line: giving up", e);
                 // give up
                 return;
             }
 
             if (line == null) {
                 // end of stream
-                Log.d("End of stream");
+                if (Config.LOGD) Log.d(TAG, "End of stream");
                 break;
             }
 
@@ -204,7 +207,7 @@ public class VtailWindow {
             }
         } catch (final BadLocationException e) {
             // should never happen
-            Log.e("insertString", e);
+            Log.e(TAG, "insertString", e);
         }
     }
 
@@ -214,22 +217,15 @@ public class VtailWindow {
     }
 
     private void initScrollPaneChangeListener() {
-        mScrollPane.addMouseWheelListener(new MouseWheelListener() {
+        mScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
             @Override
-            public void mouseWheelMoved(final MouseWheelEvent e) {
-                scrollEvent();
-            }
-        });
-
-        mTextPane.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(final KeyEvent e) {
-                scrollEvent();
-            }
-
-            @Override
-            public void keyReleased(final KeyEvent e) {
-                scrollEvent();
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                final int max = e.getAdjustable().getMaximum();
+                if (Config.LOGD) Log.d(TAG, "max=" + max);
+                if (mOldScrollbarMax == max) {
+                    scrollEvent();
+                }
+                mOldScrollbarMax = max;
             }
         });
     }

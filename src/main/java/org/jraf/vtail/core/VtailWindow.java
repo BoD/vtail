@@ -25,8 +25,11 @@
 package org.jraf.vtail.core;
 
 import java.awt.Font;
+import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,12 +40,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
@@ -101,6 +110,7 @@ public class VtailWindow {
         mFrame.setIconImage(new ImageIcon(getClass().getResource("/icon.png")).getImage());
 
         initScrollPaneChangeListener();
+        initPopupMenu();
     }
 
     public void startReadWriteLoop(final InputStream inputStream, final String charset) throws UnsupportedEncodingException {
@@ -245,6 +255,66 @@ public class VtailWindow {
                     mScrolling = false;
                     mTextPane.setBackground(mArguments.background.color);
                     mFrame.setTitle(mTitle);
+                }
+            }
+        });
+    }
+
+    private void initPopupMenu() {
+        Action copyAction = null;
+        Action selectAllAction = null;
+        final Action[] actions = mTextPane.getActions();
+        for (final Action action : actions) {
+            if (action.getValue(Action.NAME).equals("copy-to-clipboard")) {
+                copyAction = action;
+            } else if (action.getValue(Action.NAME).equals("select-all")) {
+                selectAllAction = action;
+            }
+        }
+
+        if (copyAction != null && selectAllAction != null) {
+            copyAction.putValue(Action.NAME, "Copy");
+            selectAllAction.putValue(Action.NAME, "Select all");
+        }
+
+        final JPopupMenu popup = new JPopupMenu();
+        popup.add(copyAction);
+        popup.add(selectAllAction);
+        popup.add(new AbstractAction("Clear") {
+            private static final long serialVersionUID = -4399679337757745275L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mTextPane.setText("");
+                mFirstLine = true;
+            }
+        });
+        final JCheckBoxMenuItem wrapMenuItem = new JCheckBoxMenuItem("Line wrapping");
+        wrapMenuItem.setState(!mArguments.nowrap);
+        wrapMenuItem.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                mTextPane.setWrap(wrapMenuItem.isSelected());
+                mScrollPane.doLayout();
+            }
+        });
+
+        popup.add(wrapMenuItem);
+
+        mTextPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                showPopupIfNeeded(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showPopupIfNeeded(e);
+            }
+
+            private void showPopupIfNeeded(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    popup.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });

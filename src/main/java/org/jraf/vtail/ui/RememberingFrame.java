@@ -33,8 +33,7 @@ import javax.swing.JFrame;
 import org.jraf.vtail.misc.Config;
 import org.jraf.vtail.misc.Log;
 
-public class RememberingFrame extends JFrame
-{
+public class RememberingFrame extends JFrame {
     private static final String TAG = RememberingFrame.class.getName();
 
     private static final long serialVersionUID = -8884339290080349855L;
@@ -47,24 +46,17 @@ public class RememberingFrame extends JFrame
 
     private final Preferences mPreferences;
 
-    public RememberingFrame(final Class clazz)
-    {
+    public RememberingFrame(final Class clazz) {
         super();
         mPreferences = Preferences.userNodeForPackage(clazz).node(clazz.getSimpleName());
-        addComponentListener(new ComponentAdapter()
-        {
+        addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(final ComponentEvent componentEvent)
-            {
+            public void componentResized(final ComponentEvent componentEvent) {
                 final boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
-                if (Config.LOGD) Log.d(TAG, "componentResized maximized=" + maximized + " getExtendedState()="
-                        + getExtendedState());
-                if (maximized)
-                {
+                if (Config.LOGD) Log.d(TAG, "componentResized maximized=" + maximized + " getExtendedState()=" + getExtendedState());
+                if (maximized) {
                     mPreferences.put(PREF_MAXIMIZED, "true");
-                }
-                else
-                {
+                } else {
                     mPreferences.put(PREF_MAXIMIZED, "false");
                     mPreferences.put(PREF_WIDTH, "" + getWidth());
                     mPreferences.put(PREF_HEIGHT, "" + getHeight());
@@ -73,12 +65,10 @@ public class RememberingFrame extends JFrame
             }
 
             @Override
-            public void componentMoved(final ComponentEvent componentEvent)
-            {
+            public void componentMoved(final ComponentEvent componentEvent) {
                 final boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
                 if (Config.LOGD) Log.d(TAG, "componentMoved maximized=" + maximized);
-                if (!maximized)
-                {
+                if (!maximized) {
                     mPreferences.put(PREF_X, "" + getX());
                     mPreferences.put(PREF_Y, "" + getY());
                 }
@@ -87,24 +77,17 @@ public class RememberingFrame extends JFrame
     }
 
     @Override
-    public void pack()
-    {
-        boolean maximize = "true".equals(mPreferences.get(PREF_MAXIMIZED, "false"));
+    public void pack() {
+        final boolean maximize = "true".equals(mPreferences.get(PREF_MAXIMIZED, "false"));
         if (Config.LOGD) Log.d(TAG, "pref maximized=" + maximize);
-        if (mPreferences.get(PREF_X, null) == null)
-        {
+        if (mPreferences.get(PREF_X, null) == null) {
             setSize(320, 200);
             setLocationRelativeTo(null);
-        }
-        else
-        {
+        } else {
             if (Config.LOGD) Log.d(TAG, "setBounds");
-            setBounds(Integer.parseInt(mPreferences.get(PREF_X, "320")),
-                    Integer.parseInt(mPreferences.get(PREF_Y, "240")),
-                    Integer.parseInt(mPreferences.get(PREF_WIDTH, "320")),
-                    Integer.parseInt(mPreferences.get(PREF_HEIGHT, "240")));
-            if (maximize)
-            {
+            setBounds(Integer.parseInt(mPreferences.get(PREF_X, "320")), Integer.parseInt(mPreferences.get(PREF_Y, "240")),
+                    Integer.parseInt(mPreferences.get(PREF_WIDTH, "320")), Integer.parseInt(mPreferences.get(PREF_HEIGHT, "240")));
+            if (maximize) {
                 if (Config.LOGD) Log.d(TAG, "setExtendedState");
                 setExtendedState(MAXIMIZED_BOTH);
             }

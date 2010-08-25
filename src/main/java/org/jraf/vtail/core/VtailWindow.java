@@ -24,6 +24,7 @@
  */
 package org.jraf.vtail.core;
 
+import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
@@ -48,10 +49,13 @@ import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
@@ -74,13 +78,14 @@ public class VtailWindow {
     private final WrapTextPane mTextPane;
     private final Arguments mArguments;
     private final JScrollPane mScrollPane;
+    private final JTextField mFilterTextField;
     private boolean mScrolling;
     private final String mTitle;
     private boolean mFirstLine = true;
     private int mOldScrollbarMax;
 
-    private final List<String> mLines = Collections.synchronizedList(new ArrayList<String>(30));
-
+    private final List<String> mLines = Collections.synchronizedList(new ArrayList<String>(1000));
+    private int mLineCursor;
 
 
     public VtailWindow(final Arguments arguments) {
@@ -109,8 +114,12 @@ public class VtailWindow {
         mFrame.setTitle(mTitle);
         mFrame.setIconImage(new ImageIcon(getClass().getResource("/icon.png")).getImage());
 
+        mFilterTextField = new JTextField();
+        mFrame.getContentPane().add(mFilterTextField, BorderLayout.SOUTH);
+
         initScrollPaneChangeListener();
         initPopupMenu();
+        initFilterListener();
     }
 
     public void startReadWriteLoop(final InputStream inputStream, final String charset) throws UnsupportedEncodingException {
@@ -165,8 +174,8 @@ public class VtailWindow {
     private void writeLoop() {
         while (true) {
             synchronized (mLines) {
-                for (final String line : mLines) {
-                    printLine(line);
+                for (final int len = mLines.size(); mLineCursor < len; mLineCursor++) {
+                    printLine(mLines.get(mLineCursor));
                 }
             }
 
@@ -179,8 +188,7 @@ public class VtailWindow {
                     }
                 });
             }
-            mLines.clear();
-            MiscUtil.sleep(250);
+            MiscUtil.sleep(500);
         }
     }
 
@@ -287,6 +295,8 @@ public class VtailWindow {
             public void actionPerformed(ActionEvent e) {
                 mTextPane.setText("");
                 mFirstLine = true;
+                mLines.clear();
+                mLineCursor = 0;
             }
         });
         final JCheckBoxMenuItem wrapMenuItem = new JCheckBoxMenuItem("Line wrapping");
@@ -318,5 +328,36 @@ public class VtailWindow {
                 }
             }
         });
+    }
+
+    private void initFilterListener() {
+        mFilterTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                changedUpdate(e);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                changedUpdate(e);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filter();
+            }
+        });
+    }
+
+    protected void filter() {
+        mTextPane.setText("");
+        mFirstLine = true;
+        final String filter = mFilterTextField.getText();
+        for (final String line : mLines) {
+            if (line.toLowerCase().contains(filter.toLowerCase())) {
+                printLine(line);
+            }
+        }
     }
 }

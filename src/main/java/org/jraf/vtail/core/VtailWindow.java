@@ -79,7 +79,8 @@ public class VtailWindow {
     private final Arguments mArguments;
     private final JScrollPane mScrollPane;
     private final JTextField mFilterTextField;
-    private boolean mScrolling;
+    private boolean mScrollingMode;
+    private boolean mFilteringMode;
     private final String mTitle;
     private boolean mFirstLine = true;
     private int mOldScrollbarMax;
@@ -111,7 +112,7 @@ public class VtailWindow {
         mFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mScrollPane = new JScrollPane(mTextPane);
         mFrame.getContentPane().add(mScrollPane);
-        mFrame.setTitle(mTitle);
+        updateTitle();
         mFrame.setIconImage(new ImageIcon(getClass().getResource("/icon.png")).getImage());
 
         mFilterTextField = new JTextField();
@@ -173,22 +174,32 @@ public class VtailWindow {
 
     private void writeLoop() {
         while (true) {
+            boolean moved = false;
             synchronized (mLines) {
                 for (final int len = mLines.size(); mLineCursor < len; mLineCursor++) {
-                    printLine(mLines.get(mLineCursor));
+                    final String line = mLines.get(mLineCursor);
+                    if (isFilterMatch(line)) {
+                        printLine(line);
+                        moved = true;
+                    }
                 }
             }
-
-            if (!mScrolling) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        final JScrollBar verticalScrollBar = mScrollPane.getVerticalScrollBar();
-                        verticalScrollBar.setValue(verticalScrollBar.getMaximum());
-                    }
-                });
+            if (moved) {
+                scrollDown();
             }
-            MiscUtil.sleep(500);
+            MiscUtil.sleep(250);
+        }
+    }
+
+    private void scrollDown() {
+        if (!mScrollingMode) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    final JScrollBar verticalScrollBar = mScrollPane.getVerticalScrollBar();
+                    verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+                }
+            });
         }
     }
 
@@ -249,23 +260,50 @@ public class VtailWindow {
     }
 
     private void scrollEvent() {
+        if (Config.LOGD) Log.d(TAG, "scrollEvent");
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 final JScrollBar scrollBar = mScrollPane.getVerticalScrollBar();
                 final int value = scrollBar.getValue() + scrollBar.getVisibleAmount();
                 final int max = scrollBar.getMaximum();
+                final boolean oldScrollingMode = mScrollingMode;
                 if (value < max) {
-                    mScrolling = true;
-                    mTextPane.setBackground(mArguments.scrollingBackground.color);
-                    mFrame.setTitle(mTitle + " [scrolling]");
+                    mScrollingMode = true;
+                    if (!oldScrollingMode) {
+                        updateBackgroundColor();
+                        updateTitle();
+                    }
                 } else {
-                    mScrolling = false;
-                    mTextPane.setBackground(mArguments.background.color);
-                    mFrame.setTitle(mTitle);
+                    mScrollingMode = false;
+                    if (oldScrollingMode) {
+                        updateBackgroundColor();
+                        updateTitle();
+                    }
                 }
             }
         });
+    }
+
+    private void updateBackgroundColor() {
+        if (Config.LOGD) Log.d(TAG, "updateBackgroundColor");
+        if (mScrollingMode || mFilteringMode) {
+            mTextPane.setBackground(mArguments.scrollingBackground.color);
+        } else {
+            mTextPane.setBackground(mArguments.background.color);
+        }
+    }
+
+    private void updateTitle() {
+        if (Config.LOGD) Log.d(TAG, "updateTitle");
+        final StringBuilder title = new StringBuilder(mTitle);
+        if (mScrollingMode) {
+            title.append(" [scrolling]");
+        }
+        if (mFilteringMode) {
+            title.append(" [filtering]");
+        }
+        mFrame.setTitle(title.toString());
     }
 
     private void initPopupMenu() {
@@ -297,6 +335,9 @@ public class VtailWindow {
                 mFirstLine = true;
                 mLines.clear();
                 mLineCursor = 0;
+                mScrollingMode = false;
+                updateTitle();
+                updateBackgroundColor();
             }
         });
         final JCheckBoxMenuItem wrapMenuItem = new JCheckBoxMenuItem("Line wrapping");
@@ -351,13 +392,26 @@ public class VtailWindow {
     }
 
     protected void filter() {
+        if (Config.LOGD) Log.d(TAG, "filter");
+
+        mFilteringMode = mFilterTextField.getText().trim().length() != 0;
+        updateBackgroundColor();
+        updateTitle();
+
         mTextPane.setText("");
         mFirstLine = true;
-        final String filter = mFilterTextField.getText();
         for (final String line : mLines) {
-            if (line.toLowerCase().contains(filter.toLowerCase())) {
+            if (mFilteringMode && isFilterMatch(line) || !mFilteringMode) {
                 printLine(line);
             }
         }
+        scrollDown();
+    }
+
+    private boolean isFilterMatch(String line) {
+        if (!mFilteringMode) {
+            return true;
+        }
+        return line.toLowerCase().contains(mFilterTextField.getText().toLowerCase());
     }
 }

@@ -35,6 +35,7 @@ import org.jraf.vtail.misc.MiscUtil;
 public class NeverEndingFileInputStream extends InputStream {
     private final File mFile;
     private final RandomAccessFile mRandomAccessFile;
+    private long mSleep = 250;
 
     public NeverEndingFileInputStream(final File file) throws FileNotFoundException {
         mFile = file;
@@ -56,9 +57,11 @@ public class NeverEndingFileInputStream extends InputStream {
     public int read(final byte[] b, final int off, final int len) throws IOException {
         int res = mRandomAccessFile.read(b, off, len);
         while (res == -1) {
-            MiscUtil.sleep(500);
+            MiscUtil.sleep(mSleep);
+            mSleep = 1000;
             res = mRandomAccessFile.read(b, off, len);
         }
+        mSleep = 250;
         return res;
     }
 }

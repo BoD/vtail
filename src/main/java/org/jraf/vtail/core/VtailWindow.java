@@ -50,6 +50,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -81,6 +83,7 @@ public class VtailWindow {
     private final JTextField mFilterTextField;
     private boolean mScrollingMode;
     private boolean mFilteringMode;
+    private boolean mShowFiltering;
     private final String mTitle;
     private boolean mFirstLine = true;
     private int mOldScrollbarMax;
@@ -116,11 +119,11 @@ public class VtailWindow {
         mFrame.setIconImage(new ImageIcon(getClass().getResource("/icon.png")).getImage());
 
         mFilterTextField = new JTextField();
-        mFrame.getContentPane().add(mFilterTextField, BorderLayout.SOUTH);
 
         initScrollPaneChangeListener();
         initPopupMenu();
         initFilterListener();
+        initToolBar();
     }
 
     public void startReadWriteLoop(final InputStream inputStream, final String charset) throws UnsupportedEncodingException {
@@ -241,8 +244,14 @@ public class VtailWindow {
     }
 
     public void show() {
-        mFrame.pack();
-        mFrame.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                mFrame.pack();
+                mFrame.setVisible(true);
+                mTextPane.requestFocusInWindow();
+            }
+        });
     }
 
     private void initScrollPaneChangeListener() {
@@ -327,8 +336,6 @@ public class VtailWindow {
         popup.add(copyAction);
         popup.add(selectAllAction);
         popup.add(new AbstractAction("Clear") {
-            private static final long serialVersionUID = -4399679337757745275L;
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 mTextPane.setText("");
@@ -394,7 +401,7 @@ public class VtailWindow {
     protected void filter() {
         if (Config.LOGD) Log.d(TAG, "filter");
 
-        mFilteringMode = mFilterTextField.getText().trim().length() != 0;
+        mFilteringMode = mShowFiltering && mFilterTextField.getText().trim().length() != 0;
         updateBackgroundColor();
         updateTitle();
 
@@ -413,5 +420,66 @@ public class VtailWindow {
             return true;
         }
         return line.toLowerCase().contains(mFilterTextField.getText().toLowerCase());
+    }
+
+    private void initToolBar() {
+        final JToolBar toolBar = new JToolBar();
+
+        final Action filterAction = new AbstractAction("Filter") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final Boolean selected = (Boolean) getValue(Action.SELECTED_KEY);
+                if (Config.LOGD) Log.d(TAG, "actionPerformed Filter selected=" + selected);
+                mFilterTextField.setVisible(selected);
+                mShowFiltering = selected;
+                if (selected) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            mFrame.getContentPane().add(mFilterTextField, BorderLayout.PAGE_END);
+                            mFilterTextField.requestFocusInWindow();
+                            mFrame.getContentPane().validate();
+                            scrollDown();
+                            filter();
+                        }
+                    });
+
+                } else {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            mFrame.getContentPane().remove(mFilterTextField);
+                            mFrame.getContentPane().validate();
+                            filter();
+                        }
+                    });
+
+                }
+            }
+        };
+        filterAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
+        JToggleButton toggleButton = new JToggleButton(filterAction);
+        toggleButton.setFocusable(false);
+        toolBar.add(toggleButton);
+
+        final Action highlightAction = new AbstractAction("Highlight") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (Config.LOGD) Log.d(TAG, "actionPerformed e=" + e);
+                if (Config.LOGD) Log.d(TAG, "selected=" + getValue(Action.SELECTED_KEY));
+            }
+        };
+        highlightAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
+        toggleButton = new JToggleButton(highlightAction);
+        toggleButton.setFocusable(false);
+        toolBar.add(toggleButton);
+
+
+
+        toolBar.setRollover(true);
+        toolBar.setFloatable(false);
+
+
+        mFrame.getContentPane().add(toolBar, BorderLayout.PAGE_START);
     }
 }

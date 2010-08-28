@@ -33,8 +33,6 @@ import javax.swing.JTextPane;
 
 
 public class WrapTextPane extends JTextPane {
-    private static final long serialVersionUID = -5722056766194450258L;
-
     private boolean mWrap;
 
     public void setWrap(final boolean wrap) {

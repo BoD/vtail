@@ -36,8 +36,6 @@ import org.jraf.vtail.misc.Log;
 public class RememberingFrame extends JFrame {
     private static final String TAG = RememberingFrame.class.getName();
 
-    private static final long serialVersionUID = -8884339290080349855L;
-
     private static final String PREF_MAXIMIZED = "maximized";
     private static final String PREF_WIDTH = "width";
     private static final String PREF_HEIGHT = "height";

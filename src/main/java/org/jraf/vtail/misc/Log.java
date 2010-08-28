@@ -31,11 +31,11 @@ public class Log {
     }
 
     public static void w(String tag, final String msg, final Exception e) {
-        System.err.println(System.currentTimeMillis() + " W/" + tag + ": " + msg);
+        System.out.println(System.currentTimeMillis() + " W/" + tag + ": " + msg);
         e.printStackTrace();
     }
 
     public static void d(String tag, final String msg) {
-        System.err.println(System.currentTimeMillis() + " D/" + tag + ": " + msg);
+        System.out.println(System.currentTimeMillis() + " D/" + tag + ": " + msg);
     }
 }

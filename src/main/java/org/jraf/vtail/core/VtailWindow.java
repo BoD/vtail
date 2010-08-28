@@ -270,8 +270,8 @@ public class VtailWindow {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                mFrame.pack();
                 mFrame.setVisible(true);
+                mFrame.pack();
                 mTextPane.requestFocusInWindow();
             }
         });

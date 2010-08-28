@@ -25,7 +25,9 @@
 package org.jraf.vtail.core;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
@@ -46,6 +48,7 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -61,6 +64,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import org.jraf.vtail.arguments.Arguments;
 import org.jraf.vtail.arguments.Highlight;
@@ -81,15 +85,20 @@ public class VtailWindow {
     private final Arguments mArguments;
     private final JScrollPane mScrollPane;
     private final JTextField mFilterTextField;
+    private final JTextField mHighlightTextField;
+    private final JPanel mBottomPanel;
     private boolean mScrollingMode;
     private boolean mFilteringMode;
+    private boolean mHighlightingMode;
     private boolean mShowFiltering;
+    private boolean mShowHighlighting;
     private final String mTitle;
     private boolean mFirstLine = true;
     private int mOldScrollbarMax;
 
     private final List<String> mLines = Collections.synchronizedList(new ArrayList<String>(1000));
     private int mLineCursor;
+
 
 
     public VtailWindow(final Arguments arguments) {
@@ -118,11 +127,16 @@ public class VtailWindow {
         updateTitle();
         mFrame.setIconImage(new ImageIcon(getClass().getResource("/icon.png")).getImage());
 
+        mBottomPanel = new JPanel(new GridLayout(0, 1));
+        mFrame.getContentPane().add(mBottomPanel, BorderLayout.PAGE_END);
+
         mFilterTextField = new JTextField();
+        mHighlightTextField = new JTextField();
 
         initScrollPaneChangeListener();
         initPopupMenu();
         initFilterListener();
+        initHighlightListener();
         initToolBar();
     }
 
@@ -142,7 +156,7 @@ public class VtailWindow {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                writeLoop();
+                printLoop();
             }
         }).start();
     }
@@ -175,7 +189,7 @@ public class VtailWindow {
         }
     }
 
-    private void writeLoop() {
+    private void printLoop() {
         while (true) {
             boolean moved = false;
             synchronized (mLines) {
@@ -220,13 +234,22 @@ public class VtailWindow {
 
     private void printLine(final String line) {
         SimpleAttributeSet style = DEFAULT_STYLE;
-        if (mArguments.highlightList != null) {
-            for (final Highlight highlight : mArguments.highlightList) {
-                if (highlight.pattern.matcher(line).matches()) {
-                    if (style == DEFAULT_STYLE) {
-                        style = new SimpleAttributeSet();
+
+        if (mHighlightingMode) {
+            if (isHighlightMatch(line)) {
+                style = new SimpleAttributeSet();
+                style.addAttribute(StyleConstants.Foreground, Color.BLACK);
+                style.addAttribute(StyleConstants.Background, Color.YELLOW);
+            }
+        } else {
+            if (mArguments.highlightList != null) {
+                for (final Highlight highlight : mArguments.highlightList) {
+                    if (highlight.pattern.matcher(line).matches()) {
+                        if (style == DEFAULT_STYLE) {
+                            style = new SimpleAttributeSet();
+                        }
+                        style.addAttributes(highlight.style);
                     }
-                    style.addAttributes(highlight.style);
                 }
             }
         }
@@ -398,18 +421,41 @@ public class VtailWindow {
         });
     }
 
+    private void initHighlightListener() {
+        mHighlightTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                changedUpdate(e);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                changedUpdate(e);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filter();
+            }
+        });
+    }
+
     protected void filter() {
         if (Config.LOGD) Log.d(TAG, "filter");
 
         mFilteringMode = mShowFiltering && mFilterTextField.getText().trim().length() != 0;
+        mHighlightingMode = mShowHighlighting && mHighlightTextField.getText().trim().length() != 0;
         updateBackgroundColor();
         updateTitle();
 
         mTextPane.setText("");
         mFirstLine = true;
-        for (final String line : mLines) {
-            if (mFilteringMode && isFilterMatch(line) || !mFilteringMode) {
-                printLine(line);
+        synchronized (mLines) {
+            for (final String line : mLines) {
+                if (mFilteringMode && isFilterMatch(line) || !mFilteringMode) {
+                    printLine(line);
+                }
             }
         }
         scrollDown();
@@ -422,64 +468,94 @@ public class VtailWindow {
         return line.toLowerCase().contains(mFilterTextField.getText().toLowerCase());
     }
 
+    private boolean isHighlightMatch(String line) {
+        if (!mHighlightingMode) {
+            return true;
+        }
+        return line.toLowerCase().contains(mHighlightTextField.getText().toLowerCase());
+    }
+
+
     private void initToolBar() {
         final JToolBar toolBar = new JToolBar();
 
-        final Action filterAction = new AbstractAction("Filter") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final Boolean selected = (Boolean) getValue(Action.SELECTED_KEY);
-                if (Config.LOGD) Log.d(TAG, "actionPerformed Filter selected=" + selected);
-                mFilterTextField.setVisible(selected);
-                mShowFiltering = selected;
-                if (selected) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            mFrame.getContentPane().add(mFilterTextField, BorderLayout.PAGE_END);
-                            mFilterTextField.requestFocusInWindow();
-                            mFrame.getContentPane().validate();
-                            scrollDown();
-                            filter();
-                        }
-                    });
-
-                } else {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            mFrame.getContentPane().remove(mFilterTextField);
-                            mFrame.getContentPane().validate();
-                            filter();
-                        }
-                    });
-
-                }
-            }
-        };
-        filterAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
-        JToggleButton toggleButton = new JToggleButton(filterAction);
+        mFilterAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
+        JToggleButton toggleButton = new JToggleButton(mFilterAction);
         toggleButton.setFocusable(false);
         toolBar.add(toggleButton);
 
-        final Action highlightAction = new AbstractAction("Highlight") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (Config.LOGD) Log.d(TAG, "actionPerformed e=" + e);
-                if (Config.LOGD) Log.d(TAG, "selected=" + getValue(Action.SELECTED_KEY));
-            }
-        };
-        highlightAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
-        toggleButton = new JToggleButton(highlightAction);
+        mHighlightAction.putValue(Action.SELECTED_KEY, Boolean.FALSE);
+        toggleButton = new JToggleButton(mHighlightAction);
         toggleButton.setFocusable(false);
         toolBar.add(toggleButton);
-
-
 
         toolBar.setRollover(true);
         toolBar.setFloatable(false);
 
-
         mFrame.getContentPane().add(toolBar, BorderLayout.PAGE_START);
     }
+
+    private final Action mFilterAction = new AbstractAction("Filter") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Boolean selected = (Boolean) getValue(Action.SELECTED_KEY);
+            if (Config.LOGD) Log.d(TAG, "actionPerformed Filter selected=" + selected);
+            mShowFiltering = selected;
+            if (selected) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBottomPanel.add(mFilterTextField, 0);
+                        mFilterTextField.requestFocusInWindow();
+                        mFrame.getContentPane().validate();
+                        scrollDown();
+                        filter();
+                    }
+                });
+            } else {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBottomPanel.remove(mFilterTextField);
+                        mFrame.getContentPane().validate();
+                        filter();
+                    }
+                });
+            }
+        }
+    };
+
+    private final Action mHighlightAction = new AbstractAction("Highlight") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Boolean selected = (Boolean) getValue(Action.SELECTED_KEY);
+            if (Config.LOGD) Log.d(TAG, "actionPerformed Highlight selected=" + selected);
+            mShowHighlighting = selected;
+            if (selected) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        int pos = 0;
+                        if (mShowFiltering) {
+                            pos = 1;
+                        }
+                        mBottomPanel.add(mHighlightTextField, pos);
+                        mHighlightTextField.requestFocusInWindow();
+                        mFrame.getContentPane().validate();
+                        scrollDown();
+                        filter();
+                    }
+                });
+            } else {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBottomPanel.remove(mHighlightTextField);
+                        mFrame.getContentPane().validate();
+                        filter();
+                    }
+                });
+            }
+        }
+    };
 }

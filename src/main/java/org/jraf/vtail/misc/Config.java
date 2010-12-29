@@ -25,5 +25,5 @@
 package org.jraf.vtail.misc;
 
 public class Config {
-    public static final boolean LOGD = true;
+    public static final boolean LOGD = false;
 }

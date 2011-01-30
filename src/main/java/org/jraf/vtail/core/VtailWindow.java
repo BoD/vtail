@@ -253,13 +253,15 @@ public class VtailWindow {
                 document.setCharacterAttributes(posStart, line.length() + 1, style, true);
             }
         } else {
+            SimpleAttributeSet s = null;
             if (mArguments.highlightList != null) {
                 for (final Highlight highlight : mArguments.highlightList) {
                     final Matcher matcher = highlight.pattern.matcher(line);
+                    s = new SimpleAttributeSet();
+                    s.addAttributes(highlight.style);
                     while (matcher.find()) {
-                        style = new SimpleAttributeSet();
-                        style.addAttributes(highlight.style);
-                        document.setCharacterAttributes(posStart + matcher.start(), matcher.end() - matcher.start() + 1, style, false);
+                        final int start = matcher.start();
+                        document.setCharacterAttributes(posStart + start, matcher.end() - start + 1, s, false);
                     }
                 }
             }

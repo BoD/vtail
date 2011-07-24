@@ -1,1 +1,14 @@
 vtail, a graphical 'tail -f' like utility, with highlighting capabilities.
+
+To display the usage:
+ vtail --help
+
+To use:
+ vtail [options] [file]
+
+If file is not supplied, the standard input will be used.
+In additions to individual options, you can supply a file containing one option
+per line, using the @ symbol (see the etc directory for examples.)
+
+For instance, to use with adb (Android debug bridge):
+ adb -d logcat -v time | vtail @/path/to/vtail/etc/logcat.ini

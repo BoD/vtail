@@ -7,7 +7,7 @@
  *                              /___/
  * repository.
  *
- * Copyright 2010 Benoit 'BoD' Lubek (BoD@JRAF.org).  All Rights Reserved.
+ * Copyright (C) 2010 Benoit 'BoD' Lubek (BoD@JRAF.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ package org.jraf.vtail.arguments;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.converters.BaseConverter;
 
 public class PatternConverter extends BaseConverter<Pattern> {
     public PatternConverter(final String optionName) {

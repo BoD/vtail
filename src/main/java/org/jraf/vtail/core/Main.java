@@ -7,7 +7,7 @@
  *                              /___/
  * repository.
  *
- * Copyright 2010 Benoit 'BoD' Lubek (BoD@JRAF.org).  All Rights Reserved.
+ * Copyright (C) 2010 Benoit 'BoD' Lubek (BoD@JRAF.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-
-import com.beust.jcommander.JCommander;
 
 import org.jraf.vtail.arguments.Arguments;
 

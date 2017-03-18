@@ -30,6 +30,9 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.text.StyleConstants;
 
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
+
 
 public class HighlightConverter extends BaseConverter<Highlight> {
     public HighlightConverter(final String optionName) {

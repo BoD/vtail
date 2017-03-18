@@ -54,6 +54,15 @@
 
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
+                 <executions>
+                    <execution>
+                        <id>assembly-single</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
 				<configuration>
 					<archive>
 						<manifest>
@@ -64,7 +73,7 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<finalName>vtail-${project.version}-with-deps</finalName>
+					<finalName>vtail-${project.version}-bundle</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 			</plugin>

@@ -26,6 +26,9 @@ package org.jraf.vtail.arguments;
 
 import java.awt.Color;
 
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
+
 public class ColorWrapperConverter extends BaseConverter<ColorWrapper> {
     public ColorWrapperConverter(final String optionName) {
         super(optionName);
